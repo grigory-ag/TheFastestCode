@@ -1,6 +1,9 @@
 {
     "files.associations": {
         "cstdlib": "cpp",
-        "iosfwd": "cpp"
-    }
+        "iosfwd": "cpp",
+        "iostream": "cpp",
+        "immintrin.h": "cpp"
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/g++"
 }
