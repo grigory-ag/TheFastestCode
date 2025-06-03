@@ -8,11 +8,7 @@
 #include <string>
 #include <sstream>
 #include <thread>
-
-extern "C" {
-    void start_timer();
-    double stop_timer();
-}
+#include "Timer.h"
 
 double* alloc_aligned(size_t size) {
     return static_cast<double*>(_mm_malloc(size * sizeof(double), 32));
@@ -37,37 +33,37 @@ bool read_matrix(const std::string& filename, int& N, double*& matrix) {
 }
 
 int main() {
-    // Оптимизация количества потоков OpenBLAS
+    // Optimize OpenBLAS thread count
     openblas_set_num_threads(std::thread::hardware_concurrency());
 
     int N;
     double *A = nullptr, *B = nullptr;
 
-    // Чтение матриц
+    // Read matrices
     if (!read_matrix("M1.dat", N, A) || !read_matrix("M2.dat", N, B)) {
         std::cerr << "Error reading matrix files!" << std::endl;
         return 1;
     }
 
-    // Выделение памяти для C
+    // Allocate memory for result
     double* C = alloc_aligned(N * N);
     #pragma omp parallel for
     for (int i = 0; i < N * N; ++i) {
         C[i] = 0.0;
     }
 
-    // Выполнение умножения
+    // Perform multiplication
     start_timer();
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,
                 N, N, N, 1.0, A, N, B, N, 0.0, C, N);
     double elapsed = stop_timer();
 
-    // Вывод результатов
+    // Output results
     std::cout << "Elapsed time: " << elapsed << "s\n";
     std::cout << "Performance: " << (2.0 * N * N * N) / (elapsed * 1e9) << " GFLOPS\n";
     std::cout << "I am FASTEEER!" << std::endl;
 
-    // Сохраняем результат
+    // Save result
     std::ofstream out("M3.dat");
     out << N << " // Matrix Order\n";
     for (int i = 0; i < N; ++i) {
@@ -77,7 +73,7 @@ int main() {
         out << "\n";
     }
 
-    // Очистка
+    // Clean up
     _mm_free(A);
     _mm_free(B);
     _mm_free(C);

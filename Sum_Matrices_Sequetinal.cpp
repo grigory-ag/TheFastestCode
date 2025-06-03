@@ -3,19 +3,15 @@
 #include <immintrin.h>
 #include <ctime>
 #include <limits>
+#include "Timer.h"
 
-using namespace std; // Добавлено пространство имён
-
-extern "C" {
-    void start_timer();
-    double stop_timer();
-}
+using namespace std;
 
 int main() {
     int N;
     double *M1, *M2, *M3;
     
-    // Исправлено: явное указание std::ifstream
+    // Read first matrix
     ifstream M1file("M1.dat");
     M1file >> N;
     M1file.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -29,7 +25,7 @@ int main() {
     }
     M1file.close();
 
-    // Исправлено: объявление M2file
+    // Read second matrix
     ifstream M2file("M2.dat");
     M2file >> N;
     M2file.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -43,12 +39,15 @@ int main() {
     }
     M2file.close();
 
+    // Allocate memory for result
     M3 = static_cast<double*>(_mm_malloc(N*N*sizeof(double), 32));
 
+    // Start timer and perform addition
     start_timer();
     
     const int prefetch_offset = 64;
     int i;
+    // Vectorized addition using AVX
     for (i = 0; i < N*N - 15; i += 16) {
         _mm_prefetch(M1 + i + prefetch_offset, _MM_HINT_T0);
         _mm_prefetch(M2 + i + prefetch_offset, _MM_HINT_T0);
@@ -59,16 +58,18 @@ int main() {
         _mm256_store_pd(M3+i+12,_mm256_add_pd(_mm256_load_pd(M1+i+12), _mm256_load_pd(M2+i+12)));
     }
     
+    // Process remaining elements
     for (; i < N*N; ++i) {
         M3[i] = M1[i] + M2[i];
     }
     
     double elapsed = stop_timer();
 
+    // Output results
     cout << "Elapsed time: " << elapsed << "s\n";
     cout << "I am FASTEEER!" << endl;
 
-    // Исправлено: объявление Sav
+    // Save result
     ofstream Sav("M3.dat");
     Sav << N << " // Matrix Order\n";
     for (int i = 0; i < N; ++i) {
@@ -79,6 +80,7 @@ int main() {
     }
     Sav.close();
 
+    // Free memory
     _mm_free(M1);
     _mm_free(M2);
     _mm_free(M3);

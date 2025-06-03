@@ -1,9 +1,10 @@
 #include <iostream>
 #include <ctime>
+#include "Timer.h"
 
 static clock_t timer_start;
 
-// Функции для использования в других программах
+// Functions for use in other programs
 extern "C" {
     void start_timer() {
         timer_start = clock();
@@ -15,11 +16,11 @@ extern "C" {
     }
 }
 
-// Отдельная программа для тестирования таймера
+// Separate program for timer testing
 #ifdef TEST_TIMER
 int main() {
     start_timer();
-    // Тестовая нагрузка
+    // Test workload
     volatile double sum = 0;
     for(int i = 0; i < 1'000'000; i++) {
         sum += i * 0.1;
